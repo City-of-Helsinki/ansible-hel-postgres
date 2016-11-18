@@ -1,0 +1,54 @@
+---
+# tasks file for postgres
+- name: Install packages for Postgres
+  become: yes
+  package: name={{item}} state=present
+  with_items:
+    - postgresql
+    - python-psycopg2
+
+- name: Install Postgis extension
+  become: yes
+  package: name={{item}} state=present
+  with_items:
+#    - postgresql-9.3-postgis-2.1
+    - postgis
+  when: postgres_postgis is defined and postgres_postgis
+  
+- name: Create database user
+  become_user: postgres
+  postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present
+
+- name: Ensure fi_FI.UTF-8 locale exists
+  locale_gen: name=fi_FI.UTF-8 state=present
+
+- name: Create database
+  become_user: postgres
+  postgresql_db: name={{postgres_dbname}} encoding=utf8
+                 lc_collate=fi_FI.utf8 lc_ctype=fi_FI.utf8
+                 owner={{postgres_user}} template=template0 state=present
+
+- name: Create PostGIS extension
+  become_user: postgres
+  postgresql_ext: db={{postgres_dbname}} name=postgis
+  when: {{ postgres_postgis | default(False) }}
+
+- name: Inserting ETRS-GK25 coordinate system into PostGIS
+  sudo_user: postgres
+  script: setup_3879.sh {{ postgres_dbname }}
+  when: {{ postgres_postgis | default(False) }}
+
+- name: Create hstore extension
+  become_user: postgres
+  postgresql_ext: db={{postgres_dbname}} name=hstore
+  when: {{ postgres_hstore | default(False) }}
+
+- name: Download initial SQL dump
+  become_user: "{{ postgres_app_user}}"
+  get_url: dest=/tmp/database_dump_{{postgres_app_user}}.sql.bz2 url={{postgres_sql_dump_url}}
+  when: postgres_sql_dump_url is defined
+
+- name: Apply SQL dump
+  become_user: "{{ postgres_app_user }}"
+  shell: bunzip2 -c /tmp/database_dump_{{postgres_app_user}}.sql.bz2 | psql {{postgres_dbname}}
+  when: postgres_sql_dump_url is defined
