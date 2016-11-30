@@ -31,17 +31,17 @@
 - name: Create PostGIS extension
   become_user: postgres
   postgresql_ext: db={{postgres_dbname}} name=postgis
-  when: {{ postgres_postgis | default(False) }}
+  when: "{{ postgres_postgis | default(False) }}"
 
 - name: Inserting ETRS-GK25 coordinate system into PostGIS
   sudo_user: postgres
   script: setup_3879.sh {{ postgres_dbname }}
-  when: {{ postgres_postgis | default(False) }}
+  when: "{{ postgres_postgis | default(False) }}"
 
 - name: Create hstore extension
   become_user: postgres
   postgresql_ext: db={{postgres_dbname}} name=hstore
-  when: {{ postgres_hstore | default(False) }}
+  when: "{{ postgres_hstore | default(False) }}"
 
 - name: Download initial SQL dump
   become_user: "{{ postgres_app_user}}"
