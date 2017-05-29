@@ -49,12 +49,12 @@
 - name: Create PostGIS extension
   become_user: postgres
   postgresql_ext: db={{postgres_dbname}} name=postgis
-  when: "{{ postgres_postgis | default(False) }}"
+  when: postgres_postgis | default(False)
 
 - name: Inserting ETRS-GK25 coordinate system into PostGIS
-  sudo_user: postgres
+  become_user: postgres
   script: setup_3879.sh {{ postgres_dbname }}
-  when: "{{ postgres_postgis | default(False) }}"
+  when: postgres_postgis | default(False)
 
 - name: Install HSTORE extension for Ubuntu 14.04
   become: yes
@@ -66,14 +66,17 @@
 - name: Create hstore extension
   become_user: postgres
   postgresql_ext: db={{postgres_dbname}} name=hstore
-  when: "{{ postgres_hstore | default(False) }}"
+  when: postgres_hstore | default(False)
 
 - name: Download initial SQL dump
-  become_user: "{{ postgres_app_user}}"
-  get_url: dest=/tmp/database_dump_{{postgres_app_user}}.sql.bz2 url={{postgres_sql_dump_url}}
+  become_user: postgres
+  get_url: dest=/var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2
+           url={{postgres_sql_dump_url}}
+           url_username={{postgres_url_user|default(omit)}}
+           url_password={{postgres_url_pass|default(omit)}}
   when: postgres_sql_dump_url is defined
 
 - name: Apply SQL dump
-  become_user: "{{ postgres_app_user }}"
-  shell: bunzip2 -c /tmp/database_dump_{{postgres_app_user}}.sql.bz2 | psql {{postgres_dbname}}
+  become_user: postgres
+  shell: bunzip2 -c /var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2 | psql {{postgres_dbname}}
   when: postgres_sql_dump_url is defined
