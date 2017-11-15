@@ -24,7 +24,7 @@
     - postgresql-9.3-postgis-2.1
     - postgis
   when: postgres_postgis|default(False) and ansible_distribution_major_version == "14"
-  
+
 - name: Create database user
   become_user: postgres
   postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present
@@ -44,7 +44,7 @@
                  lc_collate=fi_FI.utf8 lc_ctype=fi_FI.utf8
                  owner={{postgres_user}} template=template0 state=present
   when: not postgres_database_exists.stdout
-   
+
 
 - name: Create PostGIS extension
   become_user: postgres
