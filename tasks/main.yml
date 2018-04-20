@@ -70,6 +70,13 @@
     - postgresql-contrib-9.3
   when: postgres_hstore and ansible_distribution_major_version == "14"
 
+- name: Install hstore extension for Ubuntu 16.04
+  become: yes
+  package: name={{item}} state=present
+  with_items:
+    - postgresql-contrib-9.5
+  when: postgres_postgis and ansible_distribution_major_version == "16"
+
 - name: Create hstore extension
   become_user: postgres
   postgresql_ext: db={{postgres_dbname}} name=hstore
