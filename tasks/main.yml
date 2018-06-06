@@ -28,7 +28,7 @@
 
 - name: Create database user
   become_user: postgres
-  postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present
+  postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present encrypted=yes
 
 - name: Destroy the database, if requested
   become_user: postgres
