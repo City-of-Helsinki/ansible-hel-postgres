@@ -10,6 +10,13 @@
     - postgresql
     - python-psycopg2
 
+- name: Install Postgis extension for Ubuntu 18.04
+  become: yes
+  package: name={{item}} state=present
+  with_items:
+    - postgis
+  when: postgres_postgis and ansible_distribution_major_version == "18"
+
 - name: Install Postgis extension for Ubuntu 16.04
   become: yes
   package: name={{item}} state=present
