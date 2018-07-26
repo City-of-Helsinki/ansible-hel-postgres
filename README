@@ -1,0 +1,2 @@
+# ansible-hel-postgres
+Ansible role to install Postgres config suitable for HEL Django applications
