@@ -1,0 +1,12 @@
+galaxy_info:
+  author: vikoivun
+  description: Install Postgres with config suitable for HEL Django apps
+  company: City of Helsinki
+
+  license: MIT
+
+  min_ansible_version: 2.5
+
+  galaxy_tags: []
+
+dependencies: []
