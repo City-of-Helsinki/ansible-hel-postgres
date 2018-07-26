@@ -33,6 +33,13 @@
     - postgis
   when: postgres_postgis and ansible_distribution_major_version == "14"
 
+- name: Install Postgis extension for Debian 9
+  become: yes
+  package: name={{ item }} state=present
+  with_items:
+    - postgis
+  when: postgres_postgis and ansible_distribution_major_version == "9"
+
 - name: Create database user
   become_user: postgres
   postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present encrypted=yes
