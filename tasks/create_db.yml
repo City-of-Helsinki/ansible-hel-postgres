@@ -1,0 +1,47 @@
+- name: Install psycopg2 globally as Ansible modules require it
+  pip:
+    name: psycopg2
+    state: present
+
+- name: Create database user
+  become_user: postgres
+  postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present encrypted=yes
+
+- name: Destroy the database, if requested
+  become_user: postgres
+  postgresql_db: name={{postgres_dbname}} state=absent
+  when: postgres_destroy_db
+  register: globals_database_destroyed
+
+- name: Check if database exists already
+  command: psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ postgres_dbname }}'"
+  become_user: postgres
+  register: postgres_database_exists
+  tags: db
+
+# This fails if the database was previously created using a different
+# locale, even if it is an alias of the locale being set. Thus test for
+# existence in previous step
+- name: Create database
+  become_user: postgres
+  postgresql_db: name={{postgres_dbname}} encoding=utf8
+                 lc_collate=fi_FI.utf8 lc_ctype=fi_FI.utf8
+                 owner={{postgres_user}} template=template0 state=present
+  register: postgres_db_creation_status
+  when: not postgres_database_exists.stdout
+
+- name: Create PostGIS extension
+  become_user: postgres
+  postgresql_ext: db={{postgres_dbname}} name=postgis
+  when: postgres_postgis
+
+# This is not needed on any modern Postgis, but does not hurt
+- name: Inserting ETRS-GK25 coordinate system into PostGIS
+  become_user: postgres
+  script: setup_3879.sh {{ postgres_dbname }}
+  when: postgres_postgis
+
+- name: Create hstore extension
+  become_user: postgres
+  postgresql_ext: db={{postgres_dbname}} name=hstore
+  when: postgres_hstore

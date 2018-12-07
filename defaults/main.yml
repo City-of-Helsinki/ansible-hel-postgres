@@ -1,3 +1,8 @@
+postgres_install_engine: yes
+
+postgres_create_db: true
 postgres_destroy_db: no
 postgres_postgis: no
 postgres_hstore: no
+
+postgres_preload_data: false

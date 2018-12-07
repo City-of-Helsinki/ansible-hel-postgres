@@ -1,0 +1,13 @@
+---
+- name: Download initial SQL dump
+  become_user: postgres
+  get_url: dest=/var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2
+           url={{postgres_sql_dump_url}}
+           url_username={{postgres_url_user|default(omit)}}
+           url_password={{postgres_url_pass|default(omit)}}
+  when: postgres_sql_dump_url is defined and not postgres_database_exists.stdout
+
+- name: Apply SQL dump
+  become_user: postgres
+  shell: bunzip2 -c /var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2 | psql {{postgres_dbname}}
+  when: postgres_sql_dump_url is defined and not postgres_database_exists.stdout
