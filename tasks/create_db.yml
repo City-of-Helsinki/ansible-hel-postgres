@@ -1,3 +1,8 @@
+- name: Ensure pip is available
+  apt:
+    name: python3-pip
+    state: present
+
 - name: Install psycopg2 globally as Ansible modules require it
   pip:
     name: psycopg2
