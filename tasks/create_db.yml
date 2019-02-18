@@ -3,9 +3,9 @@
     name: python3-pip
     state: present
 
-- name: Install psycopg2 globally as Ansible modules require it
-  pip:
-    name: psycopg2
+- name: Install Python 2&3 psycopg2 globally as Ansible modules require it
+  apt:
+    name: ["python-psycopg2", "python3-psycopg2"]
     state: present
 
 - name: Create database user
