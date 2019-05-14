@@ -1,13 +1,17 @@
 ---
-- name: Download initial SQL dump
-  become_user: postgres
-  get_url: dest=/var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2
-           url={{postgres_sql_dump_url}}
-           url_username={{postgres_url_user|default(omit)}}
-           url_password={{postgres_url_pass|default(omit)}}
-  when: postgres_sql_dump_url is defined and not postgres_database_exists.stdout
-
 - name: Apply SQL dump
-  become_user: postgres
-  shell: bunzip2 -c /var/lib/postgresql/initial_{{postgres_dbname}}.sql.bz2 | psql {{postgres_dbname}}
-  when: postgres_sql_dump_url is defined and not postgres_database_exists.stdout
+  postgresql_db:
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_pass }}"
+    login_host: localhost
+    name: "{{ postgres_dbname }}"
+    state: restore
+    target: "{{ dest_temp_data.path }}/{{postgres_dbname}}.sql"
+  when: postgres_dump_available is defined and postgres_dump_available is success
+
+- name: Remove the temporary directory from destination host
+  become: no
+  file:
+    path: "{{ dest_temp_data.path }}"
+    state: absent
+  when: dest_temp_data.path is defined
