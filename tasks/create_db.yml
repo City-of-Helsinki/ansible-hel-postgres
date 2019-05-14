@@ -3,11 +3,6 @@
     name: python3-pip
     state: present
 
-- name: Install Python 2&3 psycopg2 globally as Ansible modules require it
-  apt:
-    name: ["python-psycopg2", "python3-psycopg2"]
-    state: present
-
 - name: Create database user
   become_user: postgres
   postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present encrypted=yes

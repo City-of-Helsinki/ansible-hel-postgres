@@ -1,16 +1,14 @@
 ---
 - name: Install packages for Postgres
   become: yes
-  apt: name={{ packages }} state=present update_cache=yes
+  apt: name={{ packages }} state=present update_cache=no
   vars:
     packages:
       - postgresql
-      - python-psycopg2
-      - python3-psycopg2
 
 - name: Install Postgis extension for Ubuntu 18.04
   become: yes
-  package: name=postgis state=present
+  apt: name=postgis state=present install_recommends=yes
   when: postgres_postgis and ansible_distribution_major_version == "18"
 
 - name: Install Postgis extension for Ubuntu 16.04

@@ -2,6 +2,16 @@
 - name: Ensure fi_FI.UTF-8 locale exists
   locale_gen: name=fi_FI.UTF-8 state=present
 
+- name: Install psycopg2 globally for postgres management
+  become: yes
+  apt: name={{ packages }} state=present update_cache=yes
+  vars:
+    packages:
+      - python-psycopg2
+      - python3-psycopg2
+
+- import_tasks: migration_common.yml
+
 - import_tasks: install.yml
   when: postgres_install_engine
 
@@ -9,4 +19,3 @@
   when: postgres_create_db
 
 - import_tasks: preload_dump.yml
-  when: postgres_preload_data
