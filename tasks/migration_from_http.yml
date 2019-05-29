@@ -1,0 +1,12 @@
+- name: Download initial SQL dump from HTTP source
+  become: no
+  get_url:
+    dest: "{{ dest_temp_data.path }}/{{postgres_dbname}}.pgsql.bz2"
+    url: "{{postgres_sql_dump_url}}"
+    url_username: "{{postgres_url_user|default(omit)}}"
+    url_password: "{{postgres_url_pass|default(omit)}}"
+  register: postgres_status_http_fetch
+
+- set_fact:
+    postgres_dump_available: "{{ postgres_status_http_fetch }}"
+  when: postgres_status_http_fetch is not skipped

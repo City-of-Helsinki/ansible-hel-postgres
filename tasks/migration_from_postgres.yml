@@ -1,0 +1,48 @@
+---
+- name: Create temporary directory for the database dump on source host
+  delegate_to: "{{ postgres_source_host }}"
+  become: yes
+  become_user: postgres
+  tempfile:
+    state: directory
+    suffix: db_migration
+  register: temp_data
+
+- name: Create a database dump for the source service
+  delegate_to: "{{ postgres_source_host }}"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: "{{ postgres_source_service }}"
+    state: dump
+    target: "{{ temp_data.path }}/{{ postgres_source_service }}_{{ ansible_date_time.date }}.pgsql.bz2"
+
+# We transfer through the controller, as we don't want the credentials for one host
+# to pass through another (SSH-agent forwarding might be ok for us though...)
+- name: Download the database dump
+  delegate_to: "{{ postgres_source_host }}"
+  fetch:
+    src: "{{ temp_data.path }}/{{ postgres_source_service }}_{{ ansible_date_time.date }}.pgsql.bz2"
+    dest: store/dynamic/
+    flat: yes
+
+- name: Remove the temporary directory from source host
+  delegate_to: "{{ postgres_source_host }}"
+  become: yes
+  become_user: postgres
+  file:
+    path: "{{ temp_data.path }}"
+    state: absent
+  when: temp_data.path is defined
+
+- name: Upload the database dump
+  become: no
+  copy:
+    src: store/dynamic/{{ postgres_source_service }}_{{ ansible_date_time.date }}.pgsql.bz2
+    dest: "{{ dest_temp_data.path }}/{{ postgres_dbname }}.sql.bz2"
+    mode: 0600
+  register: postgres_status_upload
+
+- set_fact:
+    postgres_dump_available: "{{ postgres_status_upload }}"
+  when: postgres_status_upload is not skipped

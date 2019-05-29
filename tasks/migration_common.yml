@@ -1,0 +1,20 @@
+---
+- name: Create temporary directory for the dump on destination host
+  become: no
+  tempfile:
+    state: directory
+    suffix: db_migration
+  register: dest_temp_data
+  when: postgres_source_host is defined or postgres_sql_dump_url is defined
+
+- include_tasks: migration_from_http.yml
+  when: postgres_sql_dump_url is defined
+
+- include_tasks: migration_from_postgres.yml
+  when: postgres_source_host is defined
+
+- name: Uncompress the archive
+  command: bunzip2 {{ postgres_dbname }}.sql.bz2
+  args:
+    chdir: "{{ dest_temp_data.path }}"
+  when: postgres_source_host is defined or postgres_sql_dump_url is defined
