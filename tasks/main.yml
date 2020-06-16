@@ -13,7 +13,7 @@
 - import_tasks: migration_common.yml
 
 - import_tasks: install.yml
-  when: postgres_install_engine
+  when: postgres_install_engine | bool
 
 - import_tasks: create_db.yml
   when: postgres_create_db

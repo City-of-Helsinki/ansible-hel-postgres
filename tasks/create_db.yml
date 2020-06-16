@@ -1,47 +1,84 @@
-- name: Ensure pip is available
-  apt:
-    name: python3-pip
-    state: present
-
-- name: Create database user
+- name: Ensure database user exists
+  become: "{{ postgres_local_db }}"
   become_user: postgres
-  postgresql_user: name={{postgres_user}} password={{postgres_pass}} state=present encrypted=yes
+  postgresql_user:
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_pass }}"
+    encrypted: true
+    state: present
+    db: postgres
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
+    ssl_mode: require
+
+- name: Make connection user a member of the database role
+  postgresql_privs:
+    database: postgres
+    type: group
+    objs: "{{ postgres_user }}"
+    # Azure postgres accounts contain vhost spec after @
+    roles: "{{ postgres_login|regex_replace('@.*','') }}"
+    login_host: "{{ postgres_host }}"
+    login_user: "{{ postgres_login }}"
+    login_password: "{{ postgres_loginpw }}"
+  when: not postgres_local_db
 
 - name: Destroy the database, if requested
+  become: "{{ postgres_local_db }}"
   become_user: postgres
-  postgresql_db: name={{postgres_dbname}} state=absent
+  postgresql_db:
+    name: "{{postgres_dbname}}"
+    state: absent
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
   when: postgres_destroy_db
   register: globals_database_destroyed
 
-- name: Check if database exists already
-  command: psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ postgres_dbname }}'"
+- name: Ensure database exists
+  become: "{{ postgres_local_db }}"
   become_user: postgres
-  register: postgres_database_exists
-  tags: db
-
-# This fails if the database was previously created using a different
-# locale, even if it is an alias of the locale being set. Thus test for
-# existence in previous step
-- name: Create database
-  become_user: postgres
-  postgresql_db: name={{postgres_dbname}} encoding=utf8
-                 lc_collate=fi_FI.utf8 lc_ctype=fi_FI.utf8
-                 owner={{postgres_user}} template=template0 state=present
+  postgresql_db:
+    name: "{{postgres_dbname}}"
+    encoding: utf8
+    lc_collate: "{% if postgres_login is undefined %}fi_FI.utf8{% else %}fi-FI{% endif %}"
+    lc_ctype: "{% if postgres_login is undefined %}fi_FI.utf8{% else %}fi-FI{% endif %}"
+    owner: "{{postgres_user}}"
+    template: template0
+    state: present
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
   register: postgres_db_creation_status
-  when: not postgres_database_exists.stdout
 
-- name: Create PostGIS extension
+- name: Ensure PostGIS extension is installed
+  become: "{{ postgres_local_db }}"
   become_user: postgres
-  postgresql_ext: db={{postgres_dbname}} name=postgis
+  postgresql_ext:
+    db: "{{postgres_dbname}}"
+    name: "postgis"
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
   when: postgres_postgis
 
 # This is not needed on any modern Postgis, but does not hurt
-- name: Inserting ETRS-GK25 coordinate system into PostGIS
+# We do not even try this if the database is remote, as it is
+# most likely a managed DB with extension already configured
+- name: Ensure ETRS-GK25 coordinate system is available
+  become: "{{ postgres_local_db }}"
   become_user: postgres
   script: setup_3879.sh {{ postgres_dbname }}
-  when: postgres_postgis
+  when: postgres_postgis and postgres_host is undefined
 
-- name: Create hstore extension
+- name: Ensure HSTORE extension is installed
+  become: "{{ postgres_local_db }}"
   become_user: postgres
-  postgresql_ext: db={{postgres_dbname}} name=hstore
+  postgresql_ext:
+    db: "{{postgres_dbname}}"
+    name: hstore
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
   when: postgres_hstore

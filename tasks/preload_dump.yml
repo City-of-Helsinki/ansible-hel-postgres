@@ -1,9 +1,9 @@
 ---
 - name: Apply SQL dump
   postgresql_db:
-    login_user: "{{ postgres_user }}"
+    login_user: "{{ postgres_user }}{{ postgres_vhost|default() }}"
     login_password: "{{ postgres_pass }}"
-    login_host: localhost
+    login_host: "{{ postgres_host | default('localhost') }}"
     name: "{{ postgres_dbname }}"
     state: restore
     target: "{{ dest_temp_data.path }}/{{postgres_dbname}}.sql"

@@ -16,6 +16,10 @@
     name: "{{ postgres_source_service }}"
     state: dump
     target: "{{ temp_data.path }}/{{ postgres_source_service }}_{{ ansible_date_time.date }}.pgsql.bz2"
+    login_host: "{{ postgres_source_pghost|default(omit) }}"
+    login_user: "{{ postgres_source_pglogin|default(omit) }}"
+    login_password: "{{ postgres_source_pgpw|default(omit) }}"
+    ssl_mode: require
 
 # We transfer through the controller, as we don't want the credentials for one host
 # to pass through another (SSH-agent forwarding might be ok for us though...)

@@ -1,4 +1,5 @@
 postgres_install_engine: yes
+postgres_local_db: true
 
 postgres_create_db: true
 postgres_destroy_db: no
@@ -6,3 +7,7 @@ postgres_postgis: no
 postgres_hstore: no
 
 postgres_preload_data: false
+
+#postgres_source_pghost: "{{ postgres_host }}"
+#postgres_source_pglogin: "{{ postgres_login }}"
+#postgres_source_pgpw: "{{ postgres_login }}"
