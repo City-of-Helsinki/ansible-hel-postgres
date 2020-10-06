@@ -2,12 +2,19 @@
 - name: Ensure fi_FI.UTF-8 locale exists
   locale_gen: name=fi_FI.UTF-8 state=present
 
-- name: Install psycopg2 globally for postgres management
+- name: Install Python 2 psycopg2 from APT (Ubuntu < 20.04)
   become: yes
   apt: name={{ packages }} state=present update_cache=yes
   vars:
     packages:
       - python-psycopg2
+  when: ansible_distribution_major_version < "20"
+
+- name: Install psycopg2 globally for postgres management
+  become: yes
+  apt: name={{ packages }} state=present update_cache=yes
+  vars:
+    packages:
       - python3-psycopg2
 
 - import_tasks: migration_common.yml

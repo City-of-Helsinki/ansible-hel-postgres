@@ -8,6 +8,8 @@ postgres_hstore: no
 
 postgres_preload_data: false
 
+postgres_wanted_extensions: []
+
 #postgres_source_pghost: "{{ postgres_host }}"
 #postgres_source_pglogin: "{{ postgres_login }}"
 #postgres_source_pgpw: "{{ postgres_login }}"

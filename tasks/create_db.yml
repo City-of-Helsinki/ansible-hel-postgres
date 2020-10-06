@@ -82,3 +82,14 @@
     login_user: "{{ postgres_login|default(omit) }}"
     login_password: "{{ postgres_loginpw|default(omit) }}"
   when: postgres_hstore
+
+- name: Install configured postgres extensions
+  become: "{{ postgres_local_db }}"
+  become_user: postgres
+  postgresql_ext:
+    db: "{{ postgres_dbname }}"
+    name: "{{ item }}"
+    login_host: "{{ postgres_host|default(omit) }}"
+    login_user: "{{ postgres_login|default(omit) }}"
+    login_password: "{{ postgres_loginpw|default(omit) }}"
+  loop: "{{ postgres_wanted_extensions }}"
