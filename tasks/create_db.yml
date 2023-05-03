@@ -42,8 +42,8 @@
   postgresql_db:
     name: "{{postgres_dbname}}"
     encoding: utf8
-    lc_collate: "{% if postgres_login is undefined %}fi_FI.utf8{% else %}fi-FI{% endif %}"
-    lc_ctype: "{% if postgres_login is undefined %}fi_FI.utf8{% else %}fi-FI{% endif %}"
+    lc_collate: "{% if postgres_login is undefined or not postgres_vhost %}fi_FI.utf8{% else %}fi-FI{% endif %}"
+    lc_ctype: "{% if postgres_login is undefined or not postgres_vhost %}fi_FI.utf8{% else %}fi-FI{% endif %}"
     owner: "{{postgres_user}}"
     template: template0
     state: present
